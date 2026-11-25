@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leaf — le hub de tes jeux</title>
+<meta name="description" content="Leaf réunit tes émulateurs GBA, DS, NES, N64, GameCube et Wii dans une interface façon console, avec ton Mii, tes thèmes et tes sauvegardes. Application Windows.">
+<meta property="og:title" content="Leaf — le hub de tes jeux">
+<meta property="og:description" content="Tes consoles réunies dans une interface façon menu Wii U et HOME 3DS. Application Windows gratuite à télécharger.">
+<meta property="og:image" content="assets/video/leaf-demo-poster.jpg">
+<meta name="theme-color" content="#10231e">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preload" href="assets/fonts/ConsoleSans-Bold.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+/* VOICE   : celle de Leaf, décontractée, phrases courtes, tutoiement.
+   IDEA    : le site se comporte comme le hub lui-même (barre latérale, barre d'aide, horloge, tuiles + panneau de détail).
+   PICTURE : la vraie vidéo de l'app, chapitrée, puis les vraies captures dans le panneau de détail.
+   COLOUR  : les palettes de Leaf (Menthe par défaut), même moteur clair/sombre que l'app ; tuiles en couleurs pleines à damier.
+   TYPE    : Console Sans (police de l'app), 4 tailles ; LAYOUT : coque 2 colonnes, cadre arrondi, empilé sous 900 px. */
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-Regular.woff2) format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-Semibold.woff2) format('woff2');font-weight:600;font-display:swap}
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-Bold.woff2) format('woff2');font-weight:700;font-display:swap}
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-ExtraBold.woff2) format('woff2');font-weight:800;font-display:swap}
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-Accents-Regular.woff2) format('woff2');font-weight:400;font-display:swap;unicode-range:U+A0,U+AB,U+B0,U+B7,U+BB,U+C0-C5,U+C7-CF,U+D1-D6,U+D7,U+D9-DD,U+E0-EF,U+F1-F6,U+F9-FD,U+FF,U+C6,U+152-153,U+178,U+2013-2014,U+2018-2019,U+201C-201D,U+2026,U+202F}
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-Accents-Semibold.woff2) format('woff2');font-weight:600;font-display:swap;unicode-range:U+A0,U+AB,U+B0,U+B7,U+BB,U+C0-C5,U+C7-CF,U+D1-D6,U+D7,U+D9-DD,U+E0-EF,U+F1-F6,U+F9-FD,U+FF,U+C6,U+152-153,U+178,U+2013-2014,U+2018-2019,U+201C-201D,U+2026,U+202F}
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-Accents-Bold.woff2) format('woff2');font-weight:700;font-display:swap;unicode-range:U+A0,U+AB,U+B0,U+B7,U+BB,U+C0-C5,U+C7-CF,U+D1-D6,U+D7,U+D9-DD,U+E0-EF,U+F1-F6,U+F9-FD,U+FF,U+C6,U+152-153,U+178,U+2013-2014,U+2018-2019,U+201C-201D,U+2026,U+202F}
+@font-face{font-family:'Console Sans';src:url(assets/fonts/ConsoleSans-Accents-ExtraBold.woff2) format('woff2');font-weight:800;font-display:swap;unicode-range:U+A0,U+AB,U+B0,U+B7,U+BB,U+C0-C5,U+C7-CF,U+D1-D6,U+D7,U+D9-DD,U+E0-EF,U+F1-F6,U+F9-FD,U+FF,U+C6,U+152-153,U+178,U+2013-2014,U+2018-2019,U+201C-201D,U+2026,U+202F}
+
+/* Valeurs par défaut = Menthe sombre (remplacées par le script de thème) */
+:root{color-scheme:dark;
+  --accent:#12b07a;--accent-2:#4fd6a3;--deep:#0b7d56;
+  --word:linear-gradient(180deg,#4fd6a3 0%,#12b07a 48%,#0b7d56 100%);
+  --ring:linear-gradient(135deg,#ffd166,#ff9f43,#ff6b6b);--ring-a:#ffd166;
+  --cta-top:#3fd19c;--cta-bot:#16b480;--cta-deep:#0b7d56;
+  --ink:#e6f7f0;--ink-soft:#9fb5ad;--line:rgba(230,247,240,.09);
+  --bg:radial-gradient(900px 620px at 10% -6%,rgba(47,191,138,.14),transparent 62%),radial-gradient(760px 520px at 100% 104%,rgba(47,191,138,.12),transparent 70%),linear-gradient(158deg,#16302a,#10231e 50%,#0b1916);
+  --bg-solid:#10231e;--side:#283733;--surface:rgba(27,46,40,.7);--strong:#2d3b37;--edge:rgba(230,247,240,.1);
+  --card:#22332e;--raised:#33423e;--tint:rgba(18,176,122,.16);--tint-strong:rgba(18,176,122,.28);--tint-ink:#9de8c9;--sh:0,0,0;--shape:rgba(147,213,187,.06);
+  --side-w:200px;--r:26px}
+:root[data-mode=light]{color-scheme:light}
+*{box-sizing:border-box;min-width:0}
+html{scroll-behavior:smooth;scroll-padding-top:92px}
+body{margin:0;background:var(--bg-solid);background-image:var(--bg);background-attachment:fixed;color:var(--ink);font:500 17px/1.55 'Console Sans','Nunito','Segoe UI',system-ui,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased}
+img,video{display:block;max-width:100%;height:auto}
+a{color:inherit}
+button{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+svg.i{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+:focus-visible{outline:3px solid var(--ring-a);outline-offset:3px;border-radius:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Formes de fond, comme le hub */
+.shapes{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.shapes span{position:absolute;background:var(--shape);border-radius:27%}
+.shapes span:nth-child(1){width:520px;height:520px;left:-140px;top:38%;rotate:18deg}
+.shapes span:nth-child(2){width:380px;height:380px;right:-90px;top:6%;rotate:-14deg}
+.shapes span:nth-child(3){width:260px;height:260px;right:22%;bottom:-120px;rotate:32deg}
+
+/* ── Coque ── */
+.shell{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;padding:18px 12px 14px;background:var(--side);box-shadow:6px 0 28px rgba(var(--sh),.22);z-index:30}
+.side-logo{display:flex;justify-content:center;padding:4px 0 14px;border-bottom:2px solid var(--line)}
+.side-logo img{height:42px;width:auto}
+.stat{display:flex;align-items:baseline;justify-content:center;gap:8px;padding:12px 4px 14px;border-bottom:2px solid var(--line)}
+.stat b{font-size:30px;font-weight:800;color:var(--accent-2);line-height:1}
+.stat span{font-weight:700}
+.nav{display:flex;flex-direction:column;gap:6px;margin:auto 0;padding:10px 0}
+.nav a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:11px 6px;border-radius:18px;text-decoration:none;font-weight:700;font-size:15px;transition:background .15s}
+.nav a svg.i{width:30px;height:30px}
+.nav a:hover{background:var(--tint)}
+.nav a.on{background:var(--raised);box-shadow:inset 0 0 0 2px var(--ring-a),0 3px 0 rgba(var(--sh),.18)}
+.mini{padding:12px;border-radius:20px;background:var(--card);border:2px solid var(--edge);display:grid;gap:8px;text-align:center}
+.mini b{font-size:15px}.mini small{font-size:13px;color:var(--ink-soft);font-weight:600}
+
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 18px 14px;background:linear-gradient(var(--bg-solid) 72%,transparent)}
+.chipleaf{display:flex;align-items:center;gap:10px;padding:6px 16px 6px 6px;border-radius:18px;background:var(--strong);border:2px solid var(--edge);font-weight:800;font-size:22px;text-decoration:none;box-shadow:0 3px 0 rgba(var(--sh),.14)}
+.chipleaf img{width:36px;height:36px;border-radius:11px;background:#fff;padding:4px}
+.hints{display:flex;align-items:center;gap:16px;padding:8px 16px;border-radius:16px;border:2px solid var(--line);font-weight:700;font-size:15px;white-space:nowrap}
+.hints span{display:flex;align-items:center;gap:6px}
+.k{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 6px;border-radius:12px;border:2px solid currentColor;font-size:12px;font-weight:800}
+.k svg.i{width:14px;height:14px;stroke-width:2.6}
+.ticker{flex:1;display:flex;align-items:center;gap:10px;overflow:hidden;min-width:0}
+.badge{flex:none;padding:5px 12px;border-radius:999px;background:linear-gradient(var(--cta-top),var(--cta-bot));color:#fff;font-weight:800;font-size:14px;box-shadow:0 2px 0 var(--cta-deep)}
+.track{flex:1;overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);mask:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.track>div{display:flex;width:max-content;animation:tick 46s linear infinite}
+.track p{display:flex;align-items:center;gap:18px;padding-right:18px;font-weight:700;font-size:15px;white-space:nowrap}
+.track img{width:16px;height:16px}
+@keyframes tick{to{transform:translateX(-50%)}}
+.clock{margin-left:auto;flex:none;display:flex;align-items:center;gap:12px;padding:6px 18px;border-radius:18px;background:var(--strong);border:2px solid var(--edge);font-weight:700;font-size:26px;font-variant-numeric:tabular-nums;box-shadow:0 3px 0 rgba(var(--sh),.14)}
+.clock i{width:2px;height:24px;background:var(--line);display:block}
+
+.frame{margin:0 18px 18px;padding:clamp(20px,2.6vw,44px);border-radius:34px;background:var(--surface);border:2px solid var(--edge);box-shadow:0 18px 42px rgba(var(--sh),.22)}
+section{scroll-margin-top:92px}
+section+section{margin-top:clamp(64px,7vw,110px)}
+.shead{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;margin-bottom:26px}
+.ptitle{display:inline-block;padding:4px 26px 6px;border-radius:999px;background:var(--word);color:#fff;font-size:34px;font-weight:800;line-height:1.15;text-shadow:0 2px 0 rgba(0,0,0,.18);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 3px 0 rgba(var(--sh),.18)}
+.shead p{font-weight:700;font-size:17px}
+
+/* Boutons façon Wii */
+.cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:12px 26px;min-height:48px;border:0;border-radius:999px;background:linear-gradient(var(--cta-top),var(--cta-bot));color:#fff;font-weight:800;font-size:17px;text-decoration:none;cursor:pointer;box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 5px 0 var(--cta-deep),0 10px 20px rgba(var(--sh),.25);transition:transform .08s,box-shadow .08s}
+.cta:active{transform:translateY(3px);box-shadow:inset 0 2px 0 rgba(255,255,255,.3),0 2px 0 var(--cta-deep)}
+.cta.big{font-size:21px;padding:16px 34px;min-height:62px}
+.cta.sm{font-size:15px;padding:8px 16px;min-height:40px}
+.cta svg.i{stroke-width:2.4}
+.ghost{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;min-height:44px;border-radius:999px;border:2px solid var(--line);background:none;font-weight:700;text-decoration:none;cursor:pointer}
+.ghost:hover{background:var(--tint)}
+
+/* ── Accueil ── */
+.hero{display:grid;grid-template-columns:minmax(300px,.82fr) minmax(0,1.6fr);gap:clamp(28px,3.4vw,56px);align-items:center}
+.hero h1 img{width:min(100%,330px);height:auto;filter:drop-shadow(0 3px 0 rgba(0,0,0,.35))}
+.tag{font-size:clamp(30px,2.6vw,42px);font-weight:800;line-height:1.08;margin:18px 0 14px;text-wrap:balance}
+.lead{color:var(--ink-soft);font-weight:600;max-width:52ch}
+.lead b{color:var(--ink)}
+.dl{margin-top:28px;display:grid;justify-items:start;gap:12px}
+.meta{font-size:14px;font-weight:700;color:var(--ink-soft)}
+.screen{margin:0}
+.scr{position:relative;padding:10px;border-radius:30px;background:var(--strong);border:2px solid var(--edge);box-shadow:0 6px 0 rgba(var(--sh),.2),0 24px 50px rgba(var(--sh),.3)}
+.scr video{width:100%;aspect-ratio:1280/684;border-radius:20px;background:#0b1916;object-fit:cover}
+.vbar{display:flex;gap:8px;margin-top:16px;align-items:stretch}
+.vctl{display:flex;gap:8px;flex:none}
+.vctl[hidden]{display:none}
+.vbtn{width:46px;height:46px;display:grid;place-items:center;border:2px solid var(--edge);border-radius:14px;background:var(--card);color:var(--ink);cursor:pointer}
+.vbtn:hover{background:var(--raised)}
+.vbtn svg.i{width:20px;height:20px;stroke-width:2.2}
+.vbtn .fill{fill:currentColor;stroke:none}
+.chapters{flex:1;list-style:none;margin:0;padding:0 0 2px;display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin}
+.chapters li{flex:1 0 auto;scroll-snap-align:start}
+.chapters button{position:relative;width:100%;min-height:46px;padding:8px 14px;border:2px solid var(--edge);border-radius:14px;background:var(--card);font-weight:700;font-size:14px;cursor:pointer;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.chapters button::before{content:'';position:absolute;inset:0;background:var(--tint-strong);transform:scaleX(var(--p,0));transform-origin:left;transition:transform .25s linear}
+.chapters button span{position:relative}
+.chapters button.on{border-color:var(--accent);color:var(--ink)}
+
+/* ── Aperçu ── */
+.tour{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,410px);gap:clamp(20px,2.4vw,40px);align-items:start}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:clamp(150px,13vw,236px);gap:clamp(12px,1.2vw,20px);padding:8px}
+.tile{--c:#35a853;position:relative;overflow:visible;border:0;padding:16px 18px;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;border-radius:var(--r);cursor:pointer;text-align:left;color:#fff;
+  background:repeating-conic-gradient(rgba(255,255,255,.1) 0 25%,transparent 0 50%) 0 0/26px 26px,linear-gradient(160deg,color-mix(in srgb,var(--c) 72%,#fff),var(--c) 75%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 4px 0 color-mix(in srgb,var(--c) 70%,#000),0 12px 24px rgba(var(--sh),.2);transition:transform .15s}
+.tile:hover{transform:translateY(-3px)}
+.tile.wide{grid-column:span 2}
+.tile h3{position:relative;z-index:1;font-size:clamp(20px,1.7vw,30px);font-weight:800;line-height:1.1;text-shadow:0 2px 0 color-mix(in srgb,var(--c) 60%,#000)}
+.tile .ico{position:absolute;right:8%;bottom:10%;width:42%;max-width:140px;aspect-ratio:1;display:grid;place-items:center;border-radius:27%;background:#fff;color:var(--c);rotate:-7deg;box-shadow:0 6px 0 rgba(0,0,0,.14)}
+.tile.wide .ico{width:30%}
+.tile:nth-child(even) .ico{rotate:5deg}
+.tile .ico svg.i{width:58%;height:58%;stroke-width:2.1}
+.tile[aria-selected=true]::after{content:'';position:absolute;inset:-7px;border-radius:calc(var(--r) + 7px);padding:4px;background:var(--ring);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.detail{position:sticky;top:96px;padding-top:30px}
+.dhead{position:absolute;top:0;left:-6px;display:flex;align-items:center;z-index:2}
+.dbadge{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;background:var(--c,#35a853);color:#fff;border:4px solid var(--bg-solid);box-shadow:0 3px 0 rgba(var(--sh),.25)}
+:root[data-mode=light] .dbadge{border-color:#fff}
+.dbadge svg.i{width:30px;height:30px;stroke-width:2.2}
+.dhead h3{margin-left:-10px;padding:6px 18px 6px 22px;border-radius:0 999px 999px 0;background:var(--strong);font-size:24px;font-weight:800;border:2px solid var(--edge);border-left:0}
+.dcard{padding:46px 22px 40px;border-radius:24px;background:var(--card);border:2px solid var(--edge);box-shadow:0 3px 0 rgba(var(--sh),.12)}
+.dcard>p{font-weight:600}
+.dlist{list-style:none;padding:0;margin:14px 0 16px;display:grid;gap:6px;font-size:15px;font-weight:700;color:var(--ink-soft)}
+.dlist li{display:flex;gap:9px;align-items:flex-start}
+.dlist li::before{content:'';flex:none;width:9px;height:9px;margin-top:7px;border-radius:3px;background:var(--c,var(--accent));rotate:45deg}
+.shot{display:block;width:100%;padding:0;border:0;border-radius:16px;overflow:hidden;cursor:zoom-in;background:#000;box-shadow:0 3px 0 rgba(var(--sh),.2)}
+.shot img{width:100%;aspect-ratio:16/9;object-fit:cover;transition:transform .3s}
+.shot:hover img{transform:scale(1.03)}
+.dopen{position:relative;margin:-26px auto 0;display:flex;width:max-content}
+.try{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:-4px 0 16px}
+.seg{display:inline-flex;padding:4px;border-radius:999px;border:2px solid var(--line);gap:2px}
+.seg button{border:0;background:none;padding:7px 16px;min-height:36px;border-radius:999px;font-weight:700;font-size:15px;cursor:pointer}
+.seg button[aria-pressed=true]{background:linear-gradient(var(--cta-top),var(--cta-bot));color:#fff;box-shadow:0 2px 0 var(--cta-deep)}
+.dots{display:flex;flex-wrap:wrap;gap:8px}
+.dots button{width:32px;height:32px;border-radius:50%;border:3px solid var(--card);background:var(--d);cursor:pointer;box-shadow:0 0 0 2px var(--line)}
+.dots button[aria-pressed=true]{box-shadow:0 0 0 3px var(--ink)}
+
+/* ── Consoles ── */
+.consoles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:clamp(14px,1.6vw,28px)}
+.consoles li{display:grid;justify-items:center;text-align:center;gap:4px}
+.consoles img{width:min(100%,170px);height:auto;margin-bottom:12px;rotate:-5deg;filter:drop-shadow(0 6px 0 rgba(0,0,0,.18));transition:rotate .2s,translate .2s}
+.consoles li:nth-child(even) img{rotate:4deg}
+.consoles li:hover img{rotate:0deg;translate:0 -4px}
+.consoles h3{font-size:19px;font-weight:800;line-height:1.2}
+.consoles p{font-size:14px;font-weight:700;color:var(--ink-soft)}
+.save{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:4px 10px;white-space:nowrap;border-radius:999px;background:var(--tint);color:var(--tint-ink);font-size:13px;font-weight:700}
+.save svg.i{width:16px;height:16px}
+.save.pc{background:var(--raised);color:var(--ink-soft)}
+.pads{margin-top:clamp(28px,3vw,44px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 36px;align-items:center;padding:22px 28px;border-radius:24px;background:var(--card);border:2px solid var(--edge)}
+.pads h3{font-size:22px;font-weight:800;margin-bottom:6px}
+.pads p{color:var(--ink-soft);font-weight:600;max-width:66ch}
+.padrow{display:flex;gap:4px}
+.padrow img{width:96px;height:96px;object-fit:contain}
+.note{margin-top:16px;font-size:15px;font-weight:700;color:var(--ink-soft);display:flex;gap:10px;align-items:center}
+.note svg.i{color:var(--accent-2)}
+
+/* ── Fonctions : lignes façon Réglages ── */
+.rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 22px;border-radius:20px;background:var(--card);border:2px solid var(--edge)}
+.row h3{font-size:18px;font-weight:800;margin-bottom:2px}
+.row p{font-size:15px;font-weight:600;color:var(--ink-soft)}
+.val{flex:none;padding:8px 16px;border-radius:999px;border:2px solid var(--line);font-size:15px;font-weight:800;white-space:nowrap}
+.val.new{border:0;background:linear-gradient(var(--cta-top),var(--cta-bot));color:#fff;box-shadow:0 2px 0 var(--cta-deep)}
+.row .ctrl{flex:none;display:grid;gap:8px;justify-items:end}
+
+/* ── Nouveautés ── */
+.news{display:grid;gap:clamp(14px,1.6vw,22px)}
+.now{padding:28px 30px 30px;border-radius:26px;background:var(--card);border:2px solid var(--edge);box-shadow:0 3px 0 rgba(var(--sh),.12)}
+.now h3{font-size:clamp(26px,2.2vw,34px);font-weight:800;line-height:1.1;margin:14px 0 16px;text-wrap:balance}
+.now ul{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 32px;font-weight:700}
+.now li{display:flex;gap:12px;align-items:flex-start}
+.now li img{width:20px;height:20px;margin-top:3px;flex:none}
+.older{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;align-items:start}
+.older details{border-radius:18px;background:var(--card);border:2px solid var(--edge)}
+.older summary{display:flex;align-items:center;gap:14px;padding:13px 18px;cursor:pointer;list-style:none;font-weight:700}
+.older summary::-webkit-details-marker{display:none}
+.older summary b{flex:none;min-width:56px;color:var(--accent-2);font-weight:800}
+:root[data-mode=light] .older summary b{color:var(--deep)}
+.older summary svg{margin-left:auto;transition:rotate .2s;color:var(--ink-soft)}
+.older details[open] summary svg{rotate:90deg}
+.older ul{margin:0;padding:0 18px 14px 88px;font-size:15px;font-weight:600;color:var(--ink-soft);display:grid;gap:4px}
+
+/* ── Installer ── */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.6vw,26px)}
+.steps li{padding:24px 24px 26px;border-radius:24px;background:var(--card);border:2px solid var(--edge)}
+.num{width:48px;height:48px;display:grid;place-items:center;border-radius:50%;background:var(--word);color:#fff;font-size:24px;font-weight:800;text-shadow:0 2px 0 rgba(0,0,0,.2);box-shadow:inset 0 2px 0 rgba(255,255,255,.35),0 3px 0 rgba(var(--sh),.2);margin-bottom:14px}
+.steps h3{font-size:21px;font-weight:800;margin-bottom:6px}
+.steps p{font-weight:600;color:var(--ink-soft);font-size:16px}
+.steps p q{color:var(--ink);font-weight:700;quotes:'«\00a0' '\00a0»'}
+.inst{margin-top:clamp(20px,2vw,32px);display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,1fr);gap:clamp(16px,2vw,32px);align-items:start}
+.faq{display:grid;gap:8px}
+.faq details{border-radius:18px;background:var(--card);border:2px solid var(--edge)}
+.faq summary{display:flex;align-items:center;gap:12px;padding:15px 20px;cursor:pointer;list-style:none;font-weight:800}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary svg{margin-left:auto;transition:rotate .2s;color:var(--ink-soft)}
+.faq details[open] summary svg{rotate:90deg}
+.faq p{padding:0 20px 16px;font-weight:600;color:var(--ink-soft);font-size:16px}
+.dlbox{display:grid;justify-items:center;text-align:center;gap:10px;padding:30px 26px 34px;border-radius:28px;background:var(--strong);border:2px solid var(--edge);box-shadow:0 5px 0 rgba(var(--sh),.16),0 18px 36px rgba(var(--sh),.2)}
+.dlbox>img{width:84px;height:84px;border-radius:24px;background:#fff;padding:10px;box-shadow:0 4px 0 rgba(var(--sh),.2);margin-bottom:6px}
+.dlbox h3{font-size:22px;font-weight:800}
+.dlbox p{font-size:14px;font-weight:700;color:var(--ink-soft)}
+.dlbox .cta{margin-top:10px}
+
+footer{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:6px 36px 30px;font-size:14px;font-weight:600;color:var(--ink-soft)}
+footer img{width:28px;height:28px}
+footer b{color:var(--ink)}
+footer a{font-weight:700}
+footer .legal{flex-basis:100%}
+
+/* Visionneuse */
+dialog{padding:0;border:0;background:none;max-width:min(94vw,1600px);width:100%;color:#fff}
+dialog::backdrop{background:rgba(5,12,10,.82)}
+dialog img{width:100%;height:auto;max-height:84vh;object-fit:contain;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+dialog p{text-align:center;font-weight:700;margin-top:12px}
+.lbx{position:absolute;top:-8px;right:-8px;width:46px;height:46px;border-radius:50%;border:3px solid #fff;background:#1d2b27;color:#fff;font-size:24px;font-weight:800;cursor:pointer;z-index:2}
+
+/* ── Largeurs ── */
+@media (max-width:1400px){.hints{display:none}}
+@media (max-width:1240px){
+  :root{--side-w:104px}
+  .side-logo img{content:url(assets/img/leaf.png);height:40px}
+  .stat{flex-direction:column;align-items:center;gap:2px}.stat b{font-size:22px}.stat span{font-size:13px}
+  .nav a{font-size:12px;padding:10px 2px}.mini{display:none}
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero h1 img{width:260px}
+  .tour{grid-template-columns:minmax(0,1fr) minmax(280px,360px)}
+  .consoles{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:34px}
+  .rows{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:1000px){
+  .tour{grid-template-columns:minmax(0,1fr)}
+  .detail{position:relative;top:0;max-width:560px}
+  .inst{grid-template-columns:minmax(0,1fr)}
+  .steps{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  body{padding-bottom:84px}
+  .side{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px rgba(var(--sh),.25)}
+  .side-logo,.stat,.mini{display:none}
+  .nav{flex-direction:row;width:100%;margin:0;padding:0;gap:2px}
+  .nav a{flex:1;font-size:11px;padding:6px 0;border-radius:14px}
+  .nav a svg.i{width:24px;height:24px}
+  .ticker{display:none}
+  .top{padding:10px 12px}
+  .clock{font-size:20px;padding:5px 12px}
+  .frame{margin:0 10px 12px;border-radius:26px;padding:18px 14px}
+  .pads{grid-template-columns:minmax(0,1fr)}
+  .padrow{flex-wrap:wrap}.padrow img{width:72px;height:72px}
+}
+@media (max-width:600px){
+  .ptitle{font-size:27px;padding:3px 20px 5px}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:132px;padding:6px}
+  .tile.wide .ico{width:34%}
+  .consoles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .row{flex-direction:column;align-items:flex-start}.row .ctrl{justify-items:start}
+  .chipleaf{font-size:18px;padding-right:12px}.chipleaf img{width:30px;height:30px}
+  .cta.big{width:100%}
+  .older ul{padding-left:18px}
+  .older,.now ul{grid-template-columns:minmax(0,1fr)}
+  footer{padding:6px 18px 24px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .track>div{animation:none}
+  *{transition:none!important}
+}
+</style>
+<script>
+/* Palettes de Leaf (mêmes valeurs que public/js/core/palettes.js) + calcul clair/sombre */
+{
+  const P = {
+    menthe:  {n:'Menthe',  a:'#12b07a',a2:'#4fd6a3',d:'#0b7d56',ink:'#1f3a32',dink:'#e6f7f0',bg:['#e6fbf1','#c9f2de','#acead0','#90e0bd'],glow:'#5fd6a0',db:'#10211c',dbg:['#16302a','#10231e','#0b1916'],dglow:'#2fbf8a',ring:['#ffd166','#ff9f43','#ff6b6b'],cta:['#16b480','#3fd19c','#0b7d56']},
+    abricot: {n:'Abricot', a:'#ff7a2f',a2:'#ffb45e',d:'#c45a10',ink:'#3b302b',dink:'#fbeee4',bg:['#ffdcc6','#ffcb98','#ffba60','#ffae42'],glow:'#ffb45e',db:'#2a1d16',dbg:['#2c1d15','#22160f','#190f0a'],dglow:'#ff8a3d',ring:['#42d3f7','#7a63ff','#c35dff'],cta:['#ff6f61','#ff8f45','#c9472a']},
+    ciel:    {n:'Ciel',    a:'#2f7cf6',a2:'#6aa8ff',d:'#1c56c0',ink:'#1e2d45',dink:'#e8f0fc',bg:['#e8f3ff','#d0e5ff','#b7d6ff','#9ec7ff'],glow:'#6aa8ff',db:'#111b2b',dbg:['#18263c','#111c2e','#0b1322'],dglow:'#3f86ff',ring:['#ffd23f','#ff9f1c','#ff5e7e'],cta:['#2f7cf6','#5c9dff','#1c56c0']},
+    ocean:   {n:'Océan',   a:'#0e9fb0',a2:'#3fcbd8',d:'#0a6f7c',ink:'#16343a',dink:'#e3f8fa',bg:['#e4f9fa','#c5eff2','#a5e4e9','#86d8df'],glow:'#3fcbd8',db:'#0d1e22',dbg:['#12292f','#0d1f23','#081518'],dglow:'#1fb5c4',ring:['#ffd166','#ff9f43','#ff6b6b'],cta:['#0e9fb0','#2fc0cf','#0a6f7c']},
+    lavande: {n:'Lavande', a:'#7a5cf0',a2:'#a693ff',d:'#5537c4',ink:'#2c2545',dink:'#efeaff',bg:['#f3eeff','#e3d9ff','#d2c4ff','#c0afff'],glow:'#a693ff',db:'#19152e',dbg:['#231d40','#1a1631','#120f22'],dglow:'#8a6cff',ring:['#5fe3d0','#3fb6f0','#2f7cf6'],cta:['#7a5cf0','#9b85ff','#5537c4']},
+    sakura:  {n:'Sakura',  a:'#e84a86',a2:'#ff8ab3',d:'#b52a5f',ink:'#3d2430',dink:'#ffeaf2',bg:['#fff1f6','#ffdeea','#ffc9dc','#ffb4cd'],glow:'#ff8ab3',db:'#26141f',dbg:['#331b29','#26141f','#1a0d15'],dglow:'#ff5f9e',ring:['#42d3f7','#7a63ff','#c35dff'],cta:['#e84a86','#ff7aa8','#b52a5f']},
+    soleil:  {n:'Soleil',  a:'#e09a00',a2:'#ffcb45',d:'#a86f00',ink:'#3a3016',dink:'#fff6dc',bg:['#fffbe6','#fff2bd','#ffe795','#ffda6e'],glow:'#ffc83d',db:'#211c0d',dbg:['#2e2712','#221d0e','#17130a'],dglow:'#ffb800',ring:['#5fd3ff','#4f7dff','#a35dff'],cta:['#ec9f00','#ffbd3a','#a86f00']},
+    graphite:{n:'Graphite',a:'#56616f',a2:'#8a95a5',d:'#363e49',ink:'#22272f',dink:'#eef1f5',bg:['#f3f5f8','#e5e9ee','#d6dce3','#c7ced8'],glow:'#aab4c2',db:'#16181c',dbg:['#1f2227','#17191d','#101114'],dglow:'#6b7686',ring:['#42d3f7','#7a63ff','#c35dff'],cta:['#56616f','#717d8e','#363e49']}
+  };
+  const hx = h => [1,3,5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const mix = (a, b, t) => '#' + hx(a).map((v, i) => Math.round(v + (hx(b)[i] - v) * t).toString(16).padStart(2, '0')).join('');
+  const rgba = (h, al) => 'rgba(' + hx(h).join(',') + ',' + al + ')';
+  function vars(p, mode) {
+    const v = {
+      '--accent': p.a, '--accent-2': p.a2, '--deep': p.d,
+      '--word': 'linear-gradient(180deg,' + p.a2 + ' 0%,' + p.a + ' 48%,' + p.d + ' 100%)',
+      '--ring': 'linear-gradient(135deg,' + p.ring.join(',') + ')', '--ring-a': p.ring[0],
+      '--cta-top': p.cta[1], '--cta-bot': p.cta[0], '--cta-deep': p.cta[2]
+    };
+    if (mode === 'dark') {
+      const b = p.db, ink = p.dink;
+      Object.assign(v, {
+        '--ink': ink, '--ink-soft': mix(ink, b, .36), '--line': rgba(ink, .09),
+        '--bg': 'radial-gradient(900px 620px at 10% -6%,' + rgba(p.dglow, .14) + ',transparent 62%),radial-gradient(760px 520px at 100% 104%,' + rgba(p.dglow, .12) + ',transparent 70%),linear-gradient(158deg,' + p.dbg[0] + ',' + p.dbg[1] + ' 50%,' + p.dbg[2] + ')',
+        '--bg-solid': p.dbg[1], '--side': mix(b, '#ffffff', .1), '--surface': rgba(mix(b, '#ffffff', .05), .7),
+        '--strong': mix(b, '#ffffff', .12), '--edge': rgba(ink, .1), '--card': mix(b, '#ffffff', .08), '--raised': mix(b, '#ffffff', .15),
+        '--tint': rgba(p.a, .16), '--tint-strong': rgba(p.a, .28), '--tint-ink': mix(p.a2, '#ffffff', .35), '--sh': '0,0,0', '--shape': rgba(mix(ink, p.a, .3), .06)
+      });
+    } else {
+      const sh = mix(p.d, '#000000', .2);
+      Object.assign(v, {
+        '--ink': p.ink, '--ink-soft': mix(p.ink, '#ffffff', .36), '--line': rgba(sh, .14),
+        '--bg': 'radial-gradient(900px 620px at 10% -6%,rgba(255,255,255,.55),transparent 62%),radial-gradient(760px 520px at 100% 104%,' + rgba(p.glow, .38) + ',transparent 70%),linear-gradient(158deg,' + p.bg[0] + ',' + p.bg[1] + ' 36%,' + p.bg[2] + ' 70%,' + p.bg[3] + ')',
+        '--bg-solid': p.bg[1], '--side': 'rgba(255,255,255,.92)', '--surface': 'rgba(255,255,255,.55)',
+        '--strong': '#ffffff', '--edge': 'rgba(255,255,255,.95)', '--card': '#ffffff', '--raised': mix('#ffffff', p.a, .1),
+        '--tint': mix('#ffffff', p.a, .14), '--tint-strong': mix('#ffffff', p.a, .26), '--tint-ink': mix(p.d, '#000000', .12), '--sh': hx(sh).join(','), '--shape': 'rgba(255,255,255,.42)'
+      });
+    }
+    return v;
+  }
+  const root = document.documentElement;
+  const state = { pal: 'menthe', mode: 'dark' };
+  function apply(pal, mode, save) {
+    if (!P[pal]) pal = 'menthe';
+    if (mode !== 'light') mode = 'dark';
+    state.pal = pal; state.mode = mode;
+    const v = vars(P[pal], mode);
+    for (const k in v) root.style.setProperty(k, v[k]);
+    root.dataset.mode = mode;
+    const meta = document.querySelector('meta[name=theme-color]');
+    if (meta) meta.content = v['--bg-solid'];
+    if (save) { try { localStorage.setItem('leaf-site-theme', JSON.stringify(state)); } catch (e) {} }
+    document.dispatchEvent(new CustomEvent('leaf:theme', { detail: state }));
+  }
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('leaf-site-theme') || '{}') || {}; } catch (e) {}
+  const attr = root.getAttribute('data-theme');
+  const prefLight = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches;
+  apply(saved.pal || 'menthe', saved.mode || (attr === 'light' || attr === 'dark' ? attr : (prefLight ? 'light' : 'dark')), false);
+  window.LeafTheme = { P, state, apply };
+}
+</script>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H15v-5.5H9v5.5H5.5A1.5 1.5 0 0 1 4 19z"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></symbol>
+  <symbol id="i-pad" viewBox="0 0 24 24"><path d="M7 6.5h10a4.6 4.6 0 0 1 4.5 3.8l.9 5a2.8 2.8 0 0 1-4.9 2.3L15.6 16H8.4l-1.9 1.6a2.8 2.8 0 0 1-4.9-2.3l.9-5A4.6 4.6 0 0 1 7 6.5z"/><path d="M7.6 9.6v4M5.6 11.6h4"/><circle cx="15.6" cy="10.4" r=".6"/><circle cx="17.8" cy="12.6" r=".6"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h8.5M17.5 7H20M4 17h2.5M11.5 17H20"/><circle cx="15" cy="7" r="2.5"/><circle cx="9" cy="17" r="2.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.6 2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v10.5M7.5 10 12 14.5 16.5 10M4.5 17v1.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V17"/></symbol>
+  <symbol id="i-mii" viewBox="0 0 24 24"><circle cx="12" cy="9" r="4.3"/><path d="M7.8 8.3c.5-2.5 2.2-3.9 4.2-3.9s3.7 1.4 4.2 3.9c-1.5-.4-2.8-1.2-3.6-2.3-1 1.2-2.8 2-4.8 2.3zM5 20.5c.9-3.2 3.6-5.2 7-5.2s6.1 2 7 5.2"/></symbol>
+  <symbol id="i-plaza" viewBox="0 0 24 24"><path d="M3.5 19.5h17M5.5 19.5v-2.6h13v2.6M8.5 16.9v-2.2h7v2.2M12 14.7V8.4M12 8.4c-1.6 0-2.7-1.1-3.2-2.7M12 8.4c1.6 0 2.7-1.1 3.2-2.7"/><circle cx="12" cy="4.6" r="1.1"/></symbol>
+  <symbol id="i-picto" viewBox="0 0 24 24"><path d="M4.5 5h15a1 1 0 0 1 1 1v9.2a1 1 0 0 1-1 1h-9.3L6.3 19.6v-3.4H4.5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M7.4 11.9c.9-1.9 1.9-1.9 2.8 0s1.9 1.9 2.8 0 1.9-1.9 2.8 0"/></symbol>
+  <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.1 0 1.8-.8 1.8-1.7 0-1.2-1-1.5-1-2.6 0-.9.7-1.5 1.7-1.5H17a3.5 3.5 0 0 0 3.5-3.5c0-4.2-3.8-7.7-8.5-7.7z"/><circle cx="7.8" cy="11.2" r="1.1"/><circle cx="10.2" cy="7.3" r="1.1"/><circle cx="14.8" cy="7.5" r="1.1"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5v.2a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1.1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1h-.2a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1.1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3h.1a1.6 1.6 0 0 0 1-1.5v-.2a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8v.1a1.6 1.6 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path class="fill" d="M8 5.2v13.6L18.8 12z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect class="fill" x="6.5" y="5" width="4" height="14" rx="1.2"/><rect class="fill" x="13.5" y="5" width="4" height="14" rx="1.2"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4zM15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4zM16 9.5l5 5M21 9.5l-5 5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-enter" viewBox="0 0 24 24"><path d="M19 5v7a2 2 0 0 1-2 2H6M10 10l-4 4 4 4"/></symbol>
+  <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.4 1.6A3.8 3.8 0 0 1 17.5 18.5z"/></symbol>
+  <symbol id="i-pc" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="11.5" rx="2"/><path d="M9 20h6M12 16v4"/></symbol>
+  <symbol id="i-tri" viewBox="0 0 24 24"><path class="fill" d="M9 6.5v11l8.5-5.5z"/></symbol>
+</svg>
+
+<div class="shapes" aria-hidden="true"><span></span><span></span><span></span></div>
+
+<div class="shell">
+  <aside class="side" aria-label="Navigation">
+    <div class="side-logo"><img src="assets/img/leaf-logo.png" alt="Leaf" width="722" height="264"></div>
+    <div class="stat"><b>1.2.0</b><span>Version</span></div>
+    <nav class="nav">
+      <a href="#accueil" class="on"><svg class="i"><use href="#i-home"/></svg>Accueil</a>
+      <a href="#apercu"><svg class="i"><use href="#i-grid"/></svg>Aperçu</a>
+      <a href="#consoles"><svg class="i"><use href="#i-pad"/></svg>Consoles</a>
+      <a href="#fonctions"><svg class="i"><use href="#i-sliders"/></svg>Fonctions</a>
+      <a href="#nouveautes"><svg class="i"><use href="#i-star"/></svg>Nouveautés</a>
+      <a href="#installer"><svg class="i"><use href="#i-download"/></svg>Installer</a>
+    </nav>
+    <div class="mini">
+      <b>Leaf pour Windows</b>
+      <small>1.2.0 · 228 Mo</small>
+      <a class="cta sm js-dl" href="#installer"><svg class="i"><use href="#i-download"/></svg>Télécharger</a>
+    </div>
+  </aside>
+
+  <div>
+    <header class="top">
+      <a class="chipleaf" href="#accueil"><img src="assets/img/leaf.png" alt="" width="36" height="36">Leaf</a>
+      <div class="hints" aria-label="Raccourcis clavier de la page">
+        <span><i class="k"><svg class="i"><use href="#i-enter"/></svg></i>Agrandir</span>
+        <span><i class="k">Échap</i>Retour</span>
+        <span><i class="k"><svg class="i"><use href="#i-left"/></svg></i><i class="k"><svg class="i"><use href="#i-right"/></svg></i>Naviguer</span>
+      </div>
+      <div class="ticker">
+        <span class="badge">Nouveau 1.2.0</span>
+        <div class="track" aria-hidden="true"><div id="tick"></div></div>
+      </div>
+      <div class="clock" aria-label="Heure"><span id="time">--:--</span><i></i><span id="date">--/--</span></div>
+    </header>
+
+    <main class="frame">
+      <!-- ACCUEIL -->
+      <section id="accueil" class="hero">
+        <div>
+          <h1><img src="assets/img/leaf-logo.png" alt="Leaf" width="722" height="264"></h1>
+          <p class="tag">Le hub de tes jeux rétro, façon menu de console.</p>
+          <p class="lead">Leaf réunit la <b>Game Boy Advance</b>, la <b>DS</b>, la <b>NES</b>, la <b>Nintendo 64</b>, la <b>GameCube</b> et la <b>Wii</b> dans une seule interface, inspirée du menu Wii U et du HOME de la 3DS. Ton Mii, tes thèmes et tes sauvegardes sont au même endroit.</p>
+          <div class="dl">
+            <a class="cta big js-dl" href="#installer"><svg class="i"><use href="#i-download"/></svg>Télécharger Leaf</a>
+            <p class="meta">Version 1.2.0 · Windows&nbsp;10 et&nbsp;11, 64&nbsp;bits · 228&nbsp;Mo</p>
+            <a class="ghost" href="#installer">Comment l'installer</a>
+          </div>
+        </div>
+        <figure class="screen">
+          <div class="scr">
+            <video id="vid" src="assets/video/leaf-demo.mp4" poster="assets/video/leaf-demo-poster.jpg" muted loop playsinline preload="metadata" controls width="1280" height="684" aria-label="Démo de Leaf : connexion, Home, jeux, Mii Maker, Mii Plaza, thèmes et réglages"></video>
+          </div>
+          <div class="vbar">
+            <div class="vctl" hidden>
+              <button class="vbtn" id="vplay" aria-label="Pause"><svg class="i"><use href="#i-pause"/></svg></button>
+              <button class="vbtn" id="vsound" aria-label="Activer le son"><svg class="i"><use href="#i-mute"/></svg></button>
+            </div>
+            <ol class="chapters" id="chapters" aria-label="Chapitres de la vidéo"></ol>
+          </div>
+        </figure>
+      </section>
+
+      <!-- APERÇU -->
+      <section id="apercu">
+        <div class="shead"><h2 class="ptitle">Aperçu</h2><p>Choisis une app pour la voir de plus près.</p></div>
+        <div class="tour">
+          <div class="tiles" id="tiles" role="tablist" aria-label="Apps de Leaf"></div>
+          <aside class="detail" id="detail" role="tabpanel" aria-live="polite"></aside>
+        </div>
+      </section>
+
+      <!-- CONSOLES -->
+      <section id="consoles">
+        <div class="shead"><h2 class="ptitle">Consoles</h2><p>Six consoles, une seule interface.</p></div>
+        <ul class="consoles" id="consoleList"></ul>
+        <div class="pads">
+          <div>
+            <h3>Ta manette, reconnue direct</h3>
+            <p>PlayStation, Xbox, Switch ou manette rétro : Leaf affiche une notification dès qu'elle se connecte. Tu choisis les touches pour Leaf, la GBA, la DS, la NES et la N64, et L2 / R2 passent d'une catégorie à l'autre. Le clavier et la souris marchent aussi.</p>
+          </div>
+          <div class="padrow">
+            <img src="assets/icons/pad-ps5.webp" alt="Manette PS5" width="160" height="160" loading="eager">
+            <img src="assets/icons/pad-xbox.webp" alt="Manette Xbox" width="160" height="160" loading="eager">
+            <img src="assets/icons/pad-switch.webp" alt="Manette Switch" width="160" height="160" loading="eager">
+            <img src="assets/icons/pad-classic.webp" alt="Manette rétro" width="160" height="160" loading="eager">
+          </div>
+        </div>
+        <p class="note"><svg class="i"><use href="#i-download"/></svg>Au premier lancement, Leaf installe RetroArch et les émulateurs tout seul : environ 240 Mo à télécharger, une seule fois.</p>
+      </section>
+
+      <!-- FONCTIONS -->
+      <section id="fonctions">
+        <div class="shead"><h2 class="ptitle">Fonctions</h2><p>Tout ce qu'il y a dans le hub, rangé comme dans les Réglages.</p></div>
+        <div class="rows">
+          <div class="row"><div><h3>Trophées et missions</h3><p>Des trophées pour tous les jeux, et des missions du jour, de la semaine et de découverte qui rapportent des points.</p></div><span class="val new">Nouveau</span></div>
+          <div class="row"><div><h3>Boutique</h3><p>Tes points servent à débloquer des fonds illustrés. Les thèmes de couleurs, eux, restent gratuits.</p></div><span class="val">Points</span></div>
+          <div class="row"><div><h3>Thèmes</h3><p>Onze palettes en clair et en sombre. Essaie les couleurs ici : la page change avec.</p></div>
+            <div class="ctrl"><div class="seg js-mode" role="group" aria-label="Mode"><button type="button" data-mode="light">Clair</button><button type="button" data-mode="dark">Sombre</button></div><div class="dots js-dots" role="group" aria-label="Palette"></div></div></div>
+          <div class="row"><div><h3>Affichage</h3><p>Fenêtré, plein écran ou sans bordure, résolution, échelle de l'interface. Leaf se cale sur le taux de rafraîchissement de ton écran.</p></div><span class="val">3 modes</span></div>
+          <div class="row"><div><h3>Graphismes des jeux</h3><p>Anticrénelage et haute résolution pour la N64 et la DS, à régler dans Graphismes.</p></div><span class="val">N64 · DS</span></div>
+          <div class="row"><div><h3>Mises à jour</h3><p>Leaf télécharge les nouvelles versions tout seul et les installe quand tu le fermes.</p></div><span class="val">Automatiques</span></div>
+          <div class="row"><div><h3>Sauvegardes</h3><p>GBA, DS, NES et N64 synchronisées avec ton compte. Celles de la GameCube et de la Wii restent sur ton PC.</p></div><span class="val">Cloud</span></div>
+          <div class="row"><div><h3>Compte ou invité</h3><p>Connecte-toi avec ton Mii pour retrouver ta progression, ou entre en invité. Leaf garde ta session d'une fois sur l'autre.</p></div><span class="val">Mii</span></div>
+        </div>
+      </section>
+
+      <!-- NOUVEAUTÉS -->
+      <section id="nouveautes">
+        <div class="shead"><h2 class="ptitle">Nouveautés</h2><p>Ce qui a changé, version par version.</p></div>
+        <div class="news">
+          <article class="now">
+            <span class="badge">Version 1.2.0</span>
+            <h3>Trophées, missions et Boutique</h3>
+            <ul id="nowList"></ul>
+          </article>
+          <div class="older" id="older"></div>
+        </div>
+      </section>
+
+      <!-- INSTALLER -->
+      <section id="installer">
+        <div class="shead"><h2 class="ptitle">Installer</h2><p>Trois étapes, et tu joues.</p></div>
+        <ol class="steps">
+          <li><span class="num">1</span><h3>Télécharge</h3><p>Récupère <b>Leaf-Setup-1.2.0.exe</b> (228 Mo) avec le bouton ci-dessous.</p></li>
+          <li><span class="num">2</span><h3>Installe</h3><p>Lance le fichier. Si Windows affiche <q>Windows a protégé votre ordinateur</q>, clique sur <q>Informations complémentaires</q> puis <q>Exécuter quand même</q> : l'installeur n'est pas encore signé.</p></li>
+          <li><span class="num">3</span><h3>Joue</h3><p>Connecte-toi ou entre en invité, crée ton Mii, et laisse Leaf installer les émulateurs au premier lancement.</p></li>
+        </ol>
+        <div class="inst">
+          <div class="faq">
+            <details open><summary>Ça marche sur Mac ou Linux ?<svg class="i"><use href="#i-chev"/></svg></summary><p>Non, Leaf est pour l'instant une application Windows uniquement (Windows 10 et 11, 64 bits).</p></details>
+            <details><summary>Il me faut une manette ?<svg class="i"><use href="#i-chev"/></svg></summary><p>Non. Tout se fait au clavier et à la souris. Une manette rend juste l'expérience plus console.</p></details>
+            <details><summary>Où vont mes sauvegardes ?<svg class="i"><use href="#i-chev"/></svg></summary><p>Celles de la GBA, de la DS, de la NES et de la N64 sont synchronisées avec ton compte. Celles de la GameCube et de la Wii restent dans le dossier de Dolphin, sur ton PC.</p></details>
+            <details><summary>Comment je mets à jour ?<svg class="i"><use href="#i-chev"/></svg></summary><p>Tu n'as rien à faire : Leaf récupère la nouvelle version en arrière-plan et l'installe à la fermeture.</p></details>
+            <details><summary>Pourquoi un deuxième téléchargement au premier lancement ?<svg class="i"><use href="#i-chev"/></svg></summary><p>Les émulateurs (RetroArch et ses cores) pèsent environ 240 Mo. Leaf les récupère sur le serveur officiel de libretro au lieu de les mettre dans l'installeur.</p></details>
+          </div>
+          <div class="dlbox">
+            <img src="assets/img/leaf.png" alt="" width="84" height="84">
+            <h3>Leaf pour Windows</h3>
+            <p>Leaf-Setup-1.2.0.exe · 228 Mo</p>
+            <p>Windows 10 et 11, 64 bits</p>
+            <a class="cta big js-dl" href="#installer"><svg class="i"><use href="#i-download"/></svg>Télécharger</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <img src="assets/img/leaf.png" alt="" width="28" height="28">
+      <span><b>Leaf 1.2.0</b> · fait par Hyl1a</span>
+      <a href="https://github.com/MohamedZenaidi44">GitHub</a>
+      <p class="legal">Leaf est un projet fan, non affilié à Nintendo. Les noms des consoles et des jeux appartiennent à leurs propriétaires.</p>
+    </footer>
+  </div>
+</div>
+
+<dialog id="lb" aria-label="Capture en grand">
+  <form method="dialog"><button class="lbx" aria-label="Fermer">×</button></form>
+  <img id="lbImg" src="" alt="">
+  <p id="lbCap"></p>
+</dialog>
+
+<script>
+{
+  /* ── À modifier : lien de l'installeur ── */
+  const DOWNLOAD_URL = 'https://pub-045046eb23854c6e897afff1193bf9bf.r2.dev/updates/win/Leaf-Setup-1.2.0.exe';
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const reduced = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T = window.LeafTheme;
+
+  for (const a of $$('.js-dl')) { a.href = DOWNLOAD_URL; a.target = '_blank'; a.rel = 'noopener'; }
+
+  /* Horloge */
+  const tick = () => {
+    const d = new Date();
+    $('#time').textContent = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    $('#date').textContent = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+  };
+  tick(); setInterval(tick, 15000);
+
+  /* Nouveautés (public/js/data/patchNotes.js) */
+  const PATCHES = [
+    ['1.2.0', 'Trophées, missions et Boutique', ['Trophées : tous les jeux, Pokémon Émeraude et Super Mario 64', 'Missions du jour, de la semaine et découvertes, qui rapportent des points', 'Boutique à la place de Media : thèmes de couleurs gratuits, fonds illustrés contre des points', 'La Radio est maintenant dans Réseau']],
+    ['1.1.15', 'Changer de catégorie à la manette', ['L2 et R2 passent de Home à Jeux, Mii, Réseau… (touches à choisir dans Manette)']],
+    ['1.1.14', 'Manette, curseur et jeux 3D plus nets', ['Touches de manette à choisir pour Leaf, GBA, DS, NES et N64', 'Curseur de Leaf : feuille, main ou flèche, à la couleur du thème', 'Bouton de volume à côté du lecteur de musique', 'Anticrénelage et haute résolution pour les jeux N64 et DS']],
+    ['1.1.13', 'Fonds illustrés et captures', ['Six thèmes avec les personnages de tes consoles', 'Des captures pour tous les jeux et toutes les apps', 'Jeux DS en écran horizontal, celui du haut en grand', 'Musique dans le Mii Maker']],
+    ['1.1.12', 'Mii Maker, manettes et thèmes', ['Mii Maker refait, avec les vraies couleurs des Mii et un bouton photo', 'Notification et son quand une manette se connecte', 'Page Thèmes refaite, avec de vrais aperçus du hub', 'Bandeau des nouveautés en haut de l\'écran']],
+    ['1.1.11', 'Fiche de jeu et barre latérale', ['Titre en grand, captures plus grandes, boutons sous la jaquette', 'Plus de vide au-dessus du Mii']],
+    ['1.1.10', 'Les Mii prennent vie', ['Ils clignent des yeux, parlent et changent d\'expression', 'Seule la tête suit le curseur', 'Bras corrigés']],
+    ['1.1.9', 'Mii en 3D partout', ['Vrais Mii 3D sur l\'écran de connexion', 'Ton Mii en pied dans la barre latérale', 'Couleurs des consoles accordées']],
+    ['1.1.8', 'Nouvel écran de connexion', ['Tu restes connecté d\'une fois sur l\'autre', 'Bouton Éteindre à côté de l\'heure']],
+    ['1.1.7', 'PictoChat', ['PictoChat en pixels', 'Nouvel installeur']],
+    ['1.1.6', 'Réglages', ['Affichage, graphismes, interface, audio, fenêtre et raccourcis']]
+  ];
+  const leafImg = '<img src="assets/img/leaf.png" alt="" width="20" height="20">';
+  $('#nowList').innerHTML = PATCHES[0][2].map(n => '<li>' + leafImg + '<span>' + n + '</span></li>').join('');
+  $('#older').innerHTML = PATCHES.slice(1).map(([v, t, notes]) =>
+    '<details><summary><b>' + v + '</b><span>' + t + '</span><svg class="i"><use href="#i-chev"/></svg></summary><ul>' + notes.map(n => '<li>' + n + '</li>').join('') + '</ul></details>').join('');
+  const tickLine = '<p>' + PATCHES[0][2].map(n => '<span>' + n + '</span>').join(leafImg) + leafImg + '</p>';
+  $('#tick').innerHTML = tickLine + tickLine;
+
+  /* Consoles (desktop/nativeEmulators.js) */
+  const CONSOLES = [
+    ['gba', 'Game Boy Advance', 'mGBA', '.gba', true],
+    ['ds', 'Nintendo DS', 'DeSmuME', '.nds', true],
+    ['nes', 'NES', 'FCEUmm', '.nes', true],
+    ['n64', 'Nintendo 64', 'Mupen64Plus-Next', '.z64 · .n64 · .v64', true],
+    ['gc', 'GameCube', 'Dolphin', '.rvz · .iso · .gcm', false],
+    ['wii', 'Wii', 'Dolphin', '.rvz · .wbfs · .iso', false]
+  ];
+  $('#consoleList').innerHTML = CONSOLES.map(([id, n, emu, ext, cloud]) =>
+    '<li><img src="assets/icons/' + id + '.webp" alt="" width="320" height="320" loading="eager"><h3>' + n + '</h3><p>' + emu + '</p><p>' + ext + '</p>' +
+    (cloud ? '<span class="save"><svg class="i"><use href="#i-cloud"/></svg>Sauvegarde cloud</span>' : '<span class="save pc"><svg class="i"><use href="#i-pc"/></svg>Sauvegarde locale</span>') + '</li>').join('');
+
+  /* Vidéo chapitrée */
+  const vid = $('#vid');
+  const CHAPTERS = [['Connexion', 0], ['Home', 9], ['Jeux', 16], ['Mii Maker', 23], ['Mii Plaza', 26], ['Thèmes', 30], ['Réglages', 40]];
+  $('#chapters').innerHTML = CHAPTERS.map(([l, t], i) => '<li><button type="button" data-i="' + i + '"><span>' + l + '</span></button></li>').join('');
+  const chapBtns = $$('#chapters button');
+  const vplay = $('#vplay'), vsound = $('#vsound');
+  vid.removeAttribute('controls');
+  $('.vctl').hidden = false;
+  const setIcon = (btn, id, label) => { btn.querySelector('use').setAttribute('href', '#' + id); btn.setAttribute('aria-label', label); };
+  const syncPlay = () => setIcon(vplay, vid.paused ? 'i-play' : 'i-pause', vid.paused ? 'Lecture' : 'Pause');
+  const syncChapters = () => {
+    const t = vid.currentTime, dur = vid.duration || 50.6;
+    chapBtns.forEach((b, i) => {
+      const s = CHAPTERS[i][1], e = i + 1 < CHAPTERS.length ? CHAPTERS[i + 1][1] : dur;
+      const p = t >= e ? 1 : t <= s ? 0 : (t - s) / (e - s);
+      b.style.setProperty('--p', t >= e ? 0 : p);
+      b.classList.toggle('on', t >= s && t < e);
+    });
+  };
+  const playVid = () => { const p = vid.play(); if (p && p.catch) p.catch(() => {}); };
+  const seek = t => { vid.currentTime = t; playVid(); syncChapters(); };
+  chapBtns.forEach(b => b.addEventListener('click', () => seek(CHAPTERS[+b.dataset.i][1])));
+  vplay.addEventListener('click', () => { vid.paused ? playVid() : vid.pause(); });
+  vsound.addEventListener('click', () => {
+    vid.muted = !vid.muted;
+    setIcon(vsound, vid.muted ? 'i-mute' : 'i-sound', vid.muted ? 'Activer le son' : 'Couper le son');
+    if (!vid.muted && vid.paused) playVid();
+  });
+  vid.addEventListener('play', syncPlay); vid.addEventListener('pause', syncPlay);
+  vid.addEventListener('timeupdate', syncChapters);
+  syncPlay(); syncChapters();
+  if (!reduced) {
+    const vio = new IntersectionObserver(es => { for (const e of es) { if (e.isIntersecting) playVid(); else vid.pause(); } }, { threshold: .25 });
+    vio.observe(vid);
+  }
+
+  /* Aperçu : tuiles + panneau de détail */
+  const TOUR = [
+    { id: 'home', t: 'Home', c: '#2fa255', ico: 'i-home', wide: true, img: 'home', at: 9,
+      d: 'L\'écran d\'accueil : reprends ton dernier jeu en un clic, ouvre une console ou griffonne sur le PictoChat.',
+      li: ['Bouton Reprendre sur ton dernier jeu', 'Un jeu à la une, avec ses captures', 'Toutes tes apps sur plusieurs pages'] },
+    { id: 'jeux', t: 'Jeux', c: '#d99a12', ico: 'i-pad', img: 'jeux', at: 16,
+      d: 'Choisis une console, puis ton jeu dans une liste avec jaquettes et captures.',
+      li: ['GBA, DS, NES, N64, GameCube et Wii', 'Fiche de jeu : titre en grand, captures, jaquette', 'Hall of Fame pour tes trophées'] },
+    { id: 'mii', t: 'Mii Maker', c: '#6fb52f', ico: 'i-mii', img: 'mii-maker', at: 23,
+      d: 'Crée ton Mii avec les vraies couleurs et les vraies pièces, en 3D.',
+      li: ['Visage, coiffure, yeux, nez, bouche, lunettes', 'Aperçu 3D en direct et bouton photo', 'Ton Mii t\'accompagne dans la barre latérale'] },
+    { id: 'plaza', t: 'Mii Plaza', c: '#3a5ba6', ico: 'i-plaza', img: 'plaza', at: 26,
+      d: 'Une place en 3D, de nuit, où les Mii se promènent autour de la fontaine.',
+      li: ['Les Mii clignent des yeux, parlent et changent d\'expression', 'Ton Mii au milieu des autres', 'Ambiance inspirée de la Place Mii'] },
+    { id: 'picto', t: 'PictoChat', c: '#3f86e6', ico: 'i-picto', img: 'picto', at: 15,
+      d: 'Le PictoChat de la DS, en pixels : dessine, écris au clavier, envoie.',
+      li: ['Crayon, gomme et clavier à l\'écran', 'Aussi en widget sur le Home', 'Les messages restent sur ton PC'] },
+    { id: 'themes', t: 'Thèmes', c: '#e2487f', ico: 'i-palette', img: 'themes', at: 30,
+      d: 'Onze palettes, chacune en clair et en sombre, plus des fonds illustrés à débloquer.',
+      li: ['Clair ou sombre en un clic', 'Zelda, Mario et Pokémon en plus des couleurs', 'Fonds illustrés dans la Boutique'], tryIt: true },
+    { id: 'reglages', t: 'Réglages', c: '#df6f30', ico: 'i-gear', img: 'reglages', at: 40,
+      d: 'Affichage, graphismes, interface, audio, fenêtre, raccourcis et manette, rangés comme sur une console.',
+      li: ['Fenêtré, plein écran ou sans bordure', 'Échelle de l\'interface et résolution', 'Taux de rafraîchissement détecté'] }
+  ];
+  const tilesEl = $('#tiles'), detailEl = $('#detail');
+  tilesEl.innerHTML = TOUR.map((x, i) =>
+    '<button type="button" role="tab" class="tile' + (x.wide ? ' wide' : '') + '" id="tab-' + x.id + '" aria-controls="detail" aria-selected="false" tabindex="-1" data-i="' + i + '" style="--c:' + x.c + '"><h3>' + x.t + '</h3><span class="ico"><svg class="i"><use href="#' + x.ico + '"/></svg></span></button>').join('');
+  const tiles = $$('#tiles .tile');
+  let cur = 0;
+  const shotSrc = (x, xl) => {
+    const base = x.img === 'themes' ? (T.state.mode === 'light' ? 'themes-clair' : 'themes-sombre') : x.img;
+    return 'assets/img/' + base + (xl ? '-xl' : '') + '.webp';
+  };
+  const tryHTML = '<div class="try"><div class="seg js-mode" role="group" aria-label="Mode"><button type="button" data-mode="light">Clair</button><button type="button" data-mode="dark">Sombre</button></div><div class="dots js-dots" role="group" aria-label="Palette"></div></div>';
+  function renderDetail() {
+    const x = TOUR[cur];
+    detailEl.style.setProperty('--c', x.c);
+    detailEl.setAttribute('aria-labelledby', 'tab-' + x.id);
+    detailEl.innerHTML =
+      '<div class="dhead"><span class="dbadge"><svg class="i"><use href="#' + x.ico + '"/></svg></span><h3>' + x.t + '</h3></div>' +
+      '<div class="dcard"><p>' + x.d + '</p><ul class="dlist">' + x.li.map(l => '<li>' + l + '</li>').join('') + '</ul>' +
+      (x.tryIt ? tryHTML : '') +
+      '<button type="button" class="shot" aria-label="Agrandir la capture de ' + x.t + '"><img src="' + shotSrc(x) + '" alt="Capture de ' + x.t + ' dans Leaf" width="1280" height="720"></button></div>' +
+      '<button type="button" class="cta dopen"><svg class="i"><use href="#i-tri"/></svg>Voir dans la vidéo</button>';
+    detailEl.querySelector('.shot').addEventListener('click', openShot);
+    detailEl.querySelector('.dopen').addEventListener('click', () => { seek(x.at); $('#accueil').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); });
+    bindTheme(detailEl);
+  }
+  function select(i, focus) {
+    cur = (i + TOUR.length) % TOUR.length;
+    tiles.forEach((t, k) => { t.setAttribute('aria-selected', k === cur ? 'true' : 'false'); t.tabIndex = k === cur ? 0 : -1; });
+    if (focus) tiles[cur].focus({ preventScroll: true });
+    renderDetail();
+  }
+  tiles.forEach((t, k) => t.addEventListener('click', () => select(k)));
+  tilesEl.addEventListener('keydown', e => {
+    if (e.key === 'Home') { e.preventDefault(); select(0, true); }
+    if (e.key === 'End') { e.preventDefault(); select(TOUR.length - 1, true); }
+  });
+
+  /* Visionneuse */
+  const lb = $('#lb');
+  function openShot() {
+    const x = TOUR[cur];
+    $('#lbImg').src = shotSrc(x, true);
+    $('#lbImg').alt = 'Capture de ' + x.t + ' dans Leaf';
+    $('#lbCap').textContent = x.t;
+    if (lb.showModal) lb.showModal();
+  }
+  lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
+
+  /* Clavier : ← → Naviguer, Entrée Agrandir (comme dans le hub) */
+  const tourSec = $('#apercu');
+  let tourVisible = false;
+  const tio = new IntersectionObserver(es => { for (const e of es) tourVisible = e.isIntersecting; }, { threshold: .3 });
+  tio.observe(tourSec);
+  document.addEventListener('keydown', e => {
+    if (lb.open || e.altKey || e.ctrlKey || e.metaKey) return;
+    const tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+    const inTiles = tilesEl.contains(e.target);
+    if (!tourVisible && !inTiles) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); select(cur + (e.key === 'ArrowRight' ? 1 : -1), inTiles); }
+    else if (e.key === 'Enter' && (inTiles || e.target === document.body)) { e.preventDefault(); openShot(); }
+  });
+
+  /* Thèmes : boutons Clair/Sombre et pastilles de palette */
+  function bindTheme(scope) {
+    for (const seg of scope.querySelectorAll('.js-mode')) {
+      for (const b of seg.querySelectorAll('button')) b.onclick = () => T.apply(T.state.pal, b.dataset.mode, true);
+    }
+    for (const box of scope.querySelectorAll('.js-dots')) {
+      box.innerHTML = Object.keys(T.P).map(k => '<button type="button" data-pal="' + k + '" aria-label="Palette ' + T.P[k].n + '" title="' + T.P[k].n + '" style="--d:' + T.P[k].a + '"></button>').join('');
+      for (const b of box.querySelectorAll('button')) b.onclick = () => T.apply(b.dataset.pal, T.state.mode, true);
+    }
+    syncTheme();
+  }
+  function syncTheme() {
+    for (const b of $$('.js-mode button')) b.setAttribute('aria-pressed', b.dataset.mode === T.state.mode ? 'true' : 'false');
+    for (const b of $$('.js-dots button')) b.setAttribute('aria-pressed', b.dataset.pal === T.state.pal ? 'true' : 'false');
+    const img = detailEl.querySelector('.shot img');
+    if (img && TOUR[cur].img === 'themes') img.src = shotSrc(TOUR[cur]);
+  }
+  document.addEventListener('leaf:theme', syncTheme);
+  bindTheme(document);
+  select(0);
+
+  /* Onglet actif de la barre latérale */
+  const navLinks = $$('.nav a');
+  const sio = new IntersectionObserver(es => {
+    for (const e of es) {
+      if (!e.isIntersecting) continue;
+      for (const a of navLinks) a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id);
+    }
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  for (const s of $$('main section')) sio.observe(s);
+}
+</script>
+</body>
+</html>
